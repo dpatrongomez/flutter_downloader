@@ -17,7 +17,10 @@ import 'models.dart';
 /// range of 0 and 100
 ///
 typedef void DownloadCallback(
-    String id, DownloadTaskStatus status, int progress);
+  String id,
+  DownloadTaskStatus status,
+  int progress,
+);
 
 ///
 /// A convenient class wraps all api functions of **FlutterDownloader** plugin
@@ -26,15 +29,23 @@ class FlutterDownloader {
   static const _channel = const MethodChannel('vn.hunghd/downloader');
   static bool _initialized = false;
 
-  static Future<Null> initialize({bool debug = true,bool ignoreSsl = false}) async {
-    assert(!_initialized,
-        'FlutterDownloader.initialize() must be called only once!');
+  static Future<Null> initialize({
+    bool debug = true,
+    bool ignoreSsl = false,
+  }) async {
+    assert(
+      !_initialized,
+      'FlutterDownloader.initialize() must be called only once!',
+    );
 
     WidgetsFlutterBinding.ensureInitialized();
 
     final callback = PluginUtilities.getCallbackHandle(callbackDispatcher)!;
-    await _channel.invokeMethod(
-        'initialize', <dynamic>[callback.toRawHandle(), debug ? 1 : 0 ,ignoreSsl? 1:0]);
+    await _channel.invokeMethod('initialize', <dynamic>[
+      callback.toRawHandle(),
+      debug ? 1 : 0,
+      ignoreSsl ? 1 : 0,
+    ]);
     _initialized = true;
     return null;
   }
@@ -68,15 +79,16 @@ class FlutterDownloader {
   ///
   /// an unique identifier of the new download task
   ///
-  static Future<String?> enqueue(
-      {required String url,
-      required String savedDir,
-      String? fileName,
-      Map<String, String>? headers,
-      bool showNotification = true,
-      bool openFileFromNotification = true,
-      bool requiresStorageNotLow = true,
-      bool saveInPublicStorage = false}) async {
+  static Future<String?> enqueue({
+    required String url,
+    required String savedDir,
+    String? fileName,
+    Map<String, String>? headers,
+    bool showNotification = true,
+    bool openFileFromNotification = true,
+    bool requiresStorageNotLow = true,
+    bool saveInPublicStorage = false,
+  }) async {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
     assert(Directory(savedDir).existsSync());
 
@@ -84,9 +96,9 @@ class FlutterDownloader {
     if (headers != null) {
       headerBuilder.write('{');
       headerBuilder.writeAll(
-          headers.entries
-              .map((entry) => '\"${entry.key}\": \"${entry.value}\"'),
-          ',');
+        headers.entries.map((entry) => '\"${entry.key}\": \"${entry.value}\"'),
+        ',',
+      );
       headerBuilder.write('}');
     }
     try {
@@ -120,14 +132,17 @@ class FlutterDownloader {
     try {
       List<dynamic> result = await _channel.invokeMethod('loadTasks');
       return result
-          .map((item) => new DownloadTask(
+          .map(
+            (item) => new DownloadTask(
               taskId: item['task_id'],
               status: DownloadTaskStatus(item['status']),
               progress: item['progress'],
               url: item['url'],
               filename: item['file_name'],
               savedDir: item['saved_dir'],
-              timeCreated: item['time_created']))
+              timeCreated: item['time_created'],
+            ),
+          )
           .toList();
     } on PlatformException catch (e) {
       print(e.message);
@@ -155,22 +170,28 @@ class FlutterDownloader {
   /// FlutterDownloader.loadTasksWithRawQuery(query: 'SELECT * FROM task WHERE status=3');
   /// ```
   ///
-  static Future<List<DownloadTask>?> loadTasksWithRawQuery(
-      {required String query}) async {
+  static Future<List<DownloadTask>?> loadTasksWithRawQuery({
+    required String query,
+  }) async {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
 
     try {
-      List<dynamic> result = await _channel
-          .invokeMethod('loadTasksWithRawQuery', {'query': query});
+      List<dynamic> result = await _channel.invokeMethod(
+        'loadTasksWithRawQuery',
+        {'query': query},
+      );
       return result
-          .map((item) => new DownloadTask(
+          .map(
+            (item) => new DownloadTask(
               taskId: item['task_id'],
               status: DownloadTaskStatus(item['status']),
               progress: item['progress'],
               url: item['url'],
               filename: item['file_name'],
               savedDir: item['saved_dir'],
-              timeCreated: item['time_created']))
+              timeCreated: item['time_created'],
+            ),
+          )
           .toList();
     } on PlatformException catch (e) {
       print(e.message);
@@ -297,13 +318,17 @@ class FlutterDownloader {
   /// * `shouldDeleteContent`: if the task is completed, set `true` to let the
   /// plugin remove the downloaded file. The default value is `false`.
   ///
-  static Future<Null> remove(
-      {required String taskId, bool shouldDeleteContent = false}) async {
+  static Future<Null> remove({
+    required String taskId,
+    bool shouldDeleteContent = false,
+  }) async {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
 
     try {
-      return await _channel.invokeMethod('remove',
-          {'task_id': taskId, 'should_delete_content': shouldDeleteContent});
+      return await _channel.invokeMethod('remove', {
+        'task_id': taskId,
+        'should_delete_content': shouldDeleteContent,
+      });
     } on PlatformException catch (e) {
       print(e.message);
       return null;
@@ -394,10 +419,13 @@ class FlutterDownloader {
   static registerCallback(DownloadCallback callback) {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
 
-    final callbackHandle = PluginUtilities.getCallbackHandle(callback)!;
-    assert(callbackHandle != null,
-        'callback must be a top-level or a static function');
-    _channel.invokeMethod(
-        'registerCallback', <dynamic>[callbackHandle.toRawHandle()]);
+    final callbackHandle = PluginUtilities.getCallbackHandle(callback);
+    assert(
+      callbackHandle != null,
+      'callback must be a top-level or a static function',
+    );
+    _channel.invokeMethod('registerCallback', <dynamic>[
+      callbackHandle!.toRawHandle(),
+    ]);
   }
 }

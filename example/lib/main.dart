@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'dart:async';
 import 'dart:io';
 
-import 'package:device_info/device_info.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:android_path_provider/android_path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -26,13 +26,8 @@ class MyApp extends StatelessWidget {
 
     return new MaterialApp(
       title: 'Flutter Demo',
-      theme: new ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: new MyHomePage(
-        title: 'Downloader',
-        platform: platform,
-      ),
+      theme: new ThemeData(primarySwatch: Colors.blue),
+      home: new MyHomePage(title: 'Downloader', platform: platform),
     );
   }
 }
@@ -53,22 +48,22 @@ class _MyHomePageState extends State<MyHomePage> {
     {
       'name': 'Learning Android Studio',
       'link':
-          'http://barbra-coco.dyndns.org/student/learning_android_studio.pdf'
+          'http://barbra-coco.dyndns.org/student/learning_android_studio.pdf',
     },
     {
       'name': 'Android Programming Cookbook',
       'link':
-          'http://enos.itcollege.ee/~jpoial/allalaadimised/reading/Android-Programming-Cookbook.pdf'
+          'http://enos.itcollege.ee/~jpoial/allalaadimised/reading/Android-Programming-Cookbook.pdf',
     },
     {
       'name': 'iOS Programming Guide',
       'link':
-          'http://darwinlogic.com/uploads/education/iOS_Programming_Guide.pdf'
+          'http://darwinlogic.com/uploads/education/iOS_Programming_Guide.pdf',
     },
     {
       'name': 'Objective-C Programming (Pre-Course Workbook',
       'link':
-          'https://www.bignerdranch.com/documents/objective-c-prereading-assignment.pdf'
+          'https://www.bignerdranch.com/documents/objective-c-prereading-assignment.pdf',
     },
   ];
 
@@ -76,36 +71,36 @@ class _MyHomePageState extends State<MyHomePage> {
     {
       'name': 'Arches National Park',
       'link':
-          'https://upload.wikimedia.org/wikipedia/commons/6/60/The_Organ_at_Arches_National_Park_Utah_Corrected.jpg'
+          'https://upload.wikimedia.org/wikipedia/commons/6/60/The_Organ_at_Arches_National_Park_Utah_Corrected.jpg',
     },
     {
       'name': 'Canyonlands National Park',
       'link':
-          'https://upload.wikimedia.org/wikipedia/commons/7/78/Canyonlands_National_Park%E2%80%A6Needles_area_%286294480744%29.jpg'
+          'https://upload.wikimedia.org/wikipedia/commons/7/78/Canyonlands_National_Park%E2%80%A6Needles_area_%286294480744%29.jpg',
     },
     {
       'name': 'Death Valley National Park',
       'link':
-          'https://upload.wikimedia.org/wikipedia/commons/b/b2/Sand_Dunes_in_Death_Valley_National_Park.jpg'
+          'https://upload.wikimedia.org/wikipedia/commons/b/b2/Sand_Dunes_in_Death_Valley_National_Park.jpg',
     },
     {
       'name': 'Gates of the Arctic National Park and Preserve',
       'link':
-          'https://upload.wikimedia.org/wikipedia/commons/e/e4/GatesofArctic.jpg'
-    }
+          'https://upload.wikimedia.org/wikipedia/commons/e/e4/GatesofArctic.jpg',
+    },
   ];
 
   final _videos = [
     {
       'name': 'Big Buck Bunny',
       'link':
-          'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+          'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     },
     {
       'name': 'Elephant Dream',
       'link':
-          'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'
-    }
+          'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    },
   ];
 
   List<_TaskInfo>? _tasks;
@@ -137,7 +132,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _bindBackgroundIsolate() {
     bool isSuccess = IsolateNameServer.registerPortWithName(
-        _port.sendPort, 'downloader_send_port');
+      _port.sendPort,
+      'downloader_send_port',
+    );
     if (!isSuccess) {
       _unbindBackgroundIsolate();
       _bindBackgroundIsolate();
@@ -166,108 +163,116 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   static void downloadCallback(
-      String id, DownloadTaskStatus status, int progress) {
+    String id,
+    DownloadTaskStatus status,
+    int progress,
+  ) {
     if (debug) {
       print(
-          'Background Isolate Callback: task ($id) is in status ($status) and process ($progress)');
+        'Background Isolate Callback: task ($id) is in status ($status) and process ($progress)',
+      );
     }
-    final SendPort send =
-        IsolateNameServer.lookupPortByName('downloader_send_port')!;
+    final SendPort send = IsolateNameServer.lookupPortByName(
+      'downloader_send_port',
+    )!;
     send.send([id, status, progress]);
   }
 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      appBar: new AppBar(
-        title: new Text(widget.title!),
-      ),
+      appBar: new AppBar(title: new Text(widget.title!)),
       body: Builder(
-          builder: (context) => _isLoading
-              ? new Center(
-                  child: new CircularProgressIndicator(),
-                )
-              : _permissionReady
-                  ? _buildDownloadList()
-                  : _buildNoPermissionWarning()),
+        builder: (context) => _isLoading
+            ? new Center(child: new CircularProgressIndicator())
+            : _permissionReady
+            ? _buildDownloadList()
+            : _buildNoPermissionWarning(),
+      ),
     );
   }
 
   Widget _buildDownloadList() => Container(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 16.0),
-          children: _items
-              .map((item) => item.task == null
-                  ? _buildListSection(item.name!)
-                  : DownloadItem(
-                      data: item,
-                      onItemClick: (task) {
-                        _openDownloadedFile(task).then((success) {
-                          if (!success) {
-                            Scaffold.of(context).showSnackBar(SnackBar(
-                                content: Text('Cannot open this file')));
-                          }
-                        });
-                      },
-                      onActionClick: (task) {
-                        if (task.status == DownloadTaskStatus.undefined) {
-                          _requestDownload(task);
-                        } else if (task.status == DownloadTaskStatus.running) {
-                          _pauseDownload(task);
-                        } else if (task.status == DownloadTaskStatus.paused) {
-                          _resumeDownload(task);
-                        } else if (task.status == DownloadTaskStatus.complete) {
-                          _delete(task);
-                        } else if (task.status == DownloadTaskStatus.failed) {
-                          _retryDownload(task);
+    child: ListView(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      children: _items
+          .map(
+            (item) => item.task == null
+                ? _buildListSection(item.name!)
+                : DownloadItem(
+                    data: item,
+                    onItemClick: (task) {
+                      _openDownloadedFile(task).then((success) {
+                        if (!success && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Cannot open this file')),
+                          );
                         }
-                      },
-                    ))
-              .toList(),
-        ),
-      );
+                      });
+                    },
+                    onActionClick: (task) {
+                      if (task.status == DownloadTaskStatus.undefined) {
+                        _requestDownload(task);
+                      } else if (task.status == DownloadTaskStatus.running) {
+                        _pauseDownload(task);
+                      } else if (task.status == DownloadTaskStatus.paused) {
+                        _resumeDownload(task);
+                      } else if (task.status == DownloadTaskStatus.complete) {
+                        _delete(task);
+                      } else if (task.status == DownloadTaskStatus.failed) {
+                        _retryDownload(task);
+                      }
+                    },
+                  ),
+          )
+          .toList(),
+    ),
+  );
 
   Widget _buildListSection(String title) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Text(
-          title,
-          style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 18.0),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    child: Text(
+      title,
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.blue,
+        fontSize: 18.0,
+      ),
+    ),
+  );
 
   Widget _buildNoPermissionWarning() => Container(
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Text(
-                  'Please grant accessing storage permission to continue -_-',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.blueGrey, fontSize: 18.0),
-                ),
-              ),
-              SizedBox(
-                height: 32.0,
-              ),
-              FlatButton(
-                  onPressed: () {
-                    _retryRequestPermission();
-                  },
-                  child: Text(
-                    'Retry',
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20.0),
-                  ))
-            ],
+    child: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Text(
+              'Please grant accessing storage permission to continue -_-',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.blueGrey, fontSize: 18.0),
+            ),
           ),
-        ),
-      );
+          SizedBox(height: 32.0),
+          TextButton(
+            onPressed: () {
+              _retryRequestPermission();
+            },
+            child: Text(
+              'Retry',
+              style: TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
+                fontSize: 20.0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Future<void> _retryRequestPermission() async {
     final hasGranted = await _checkPermission();
@@ -290,10 +295,6 @@ class _MyHomePageState extends State<MyHomePage> {
       openFileFromNotification: true,
       saveInPublicStorage: true,
     );
-  }
-
-  void _cancelDownload(_TaskInfo task) async {
-    await FlutterDownloader.cancel(taskId: task.taskId!);
   }
 
   void _pauseDownload(_TaskInfo task) async {
@@ -320,7 +321,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _delete(_TaskInfo task) async {
     await FlutterDownloader.remove(
-        taskId: task.taskId!, shouldDeleteContent: true);
+      taskId: task.taskId!,
+      shouldDeleteContent: true,
+    );
     await _prepare();
     setState(() {});
   }
@@ -354,8 +357,11 @@ class _MyHomePageState extends State<MyHomePage> {
     _tasks = [];
     _items = [];
 
-    _tasks!.addAll(_documents.map((document) =>
-        _TaskInfo(name: document['name'], link: document['link'])));
+    _tasks!.addAll(
+      _documents.map(
+        (document) => _TaskInfo(name: document['name'], link: document['link']),
+      ),
+    );
 
     _items.add(_ItemHolder(name: 'Documents'));
     for (int i = count; i < _tasks!.length; i++) {
@@ -363,8 +369,11 @@ class _MyHomePageState extends State<MyHomePage> {
       count++;
     }
 
-    _tasks!.addAll(_images
-        .map((image) => _TaskInfo(name: image['name'], link: image['link'])));
+    _tasks!.addAll(
+      _images.map(
+        (image) => _TaskInfo(name: image['name'], link: image['link']),
+      ),
+    );
 
     _items.add(_ItemHolder(name: 'Images'));
     for (int i = count; i < _tasks!.length; i++) {
@@ -372,8 +381,11 @@ class _MyHomePageState extends State<MyHomePage> {
       count++;
     }
 
-    _tasks!.addAll(_videos
-        .map((video) => _TaskInfo(name: video['name'], link: video['link'])));
+    _tasks!.addAll(
+      _videos.map(
+        (video) => _TaskInfo(name: video['name'], link: video['link']),
+      ),
+    );
 
     _items.add(_ItemHolder(name: 'Videos'));
     for (int i = count; i < _tasks!.length; i++) {
@@ -478,7 +490,7 @@ class DownloadItem extends StatelessWidget {
                       value: data!.task!.progress! / 100,
                     ),
                   )
-                : Container()
+                : Container(),
           ].toList(),
         ),
       ),
@@ -500,10 +512,7 @@ class DownloadItem extends StatelessWidget {
         onPressed: () {
           onActionClick!(task);
         },
-        child: Icon(
-          Icons.pause,
-          color: Colors.red,
-        ),
+        child: Icon(Icons.pause, color: Colors.red),
         shape: CircleBorder(),
         constraints: BoxConstraints(minHeight: 32.0, minWidth: 32.0),
       );
@@ -512,10 +521,7 @@ class DownloadItem extends StatelessWidget {
         onPressed: () {
           onActionClick!(task);
         },
-        child: Icon(
-          Icons.play_arrow,
-          color: Colors.green,
-        ),
+        child: Icon(Icons.play_arrow, color: Colors.green),
         shape: CircleBorder(),
         constraints: BoxConstraints(minHeight: 32.0, minWidth: 32.0),
       );
@@ -524,21 +530,15 @@ class DownloadItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(
-            'Ready',
-            style: TextStyle(color: Colors.green),
-          ),
+          Text('Ready', style: TextStyle(color: Colors.green)),
           RawMaterialButton(
             onPressed: () {
               onActionClick!(task);
             },
-            child: Icon(
-              Icons.delete_forever,
-              color: Colors.red,
-            ),
+            child: Icon(Icons.delete_forever, color: Colors.red),
             shape: CircleBorder(),
             constraints: BoxConstraints(minHeight: 32.0, minWidth: 32.0),
-          )
+          ),
         ],
       );
     } else if (task.status == DownloadTaskStatus.canceled) {
@@ -553,13 +553,10 @@ class DownloadItem extends StatelessWidget {
             onPressed: () {
               onActionClick!(task);
             },
-            child: Icon(
-              Icons.refresh,
-              color: Colors.green,
-            ),
+            child: Icon(Icons.refresh, color: Colors.green),
             shape: CircleBorder(),
             constraints: BoxConstraints(minHeight: 32.0, minWidth: 32.0),
-          )
+          ),
         ],
       );
     } else if (task.status == DownloadTaskStatus.enqueued) {
